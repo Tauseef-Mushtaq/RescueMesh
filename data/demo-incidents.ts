@@ -1,0 +1,168 @@
+import type { IncidentType } from "@/lib/supabase/types";
+
+export interface DemoIncidentSeed {
+  id: string;
+  reportText: string;
+  language: "English" | "Urdu" | "Roman Urdu";
+  incidentType: IncidentType;
+  summary: string;
+  latitude: number;
+  longitude: number;
+  peopleAffected: number;
+  childrenCount: number;
+  elderlyCount: number;
+  medicalEmergency: boolean;
+  mobilityImpairment: boolean;
+  immediateDanger: boolean;
+  foodShortage: boolean;
+  waterRisk: boolean;
+  needs: string[];
+  riskFactors?: string[];
+}
+
+export const DEMO_INCIDENTS: DemoIncidentSeed[] = [
+  {
+    id: "d0000001-0000-0000-0000-000000000001",
+    reportText: "Pani ghar mein aa gaya hai, do bachay hain aur abbu chal nahi saktay. Please help us evacuate!",
+    language: "Roman Urdu",
+    incidentType: "flood",
+    summary: "Family trapped in flooded home with elderly person and children requiring immediate evacuation",
+    latitude: 24.8607,
+    longitude: 67.0011,
+    peopleAffected: 5,
+    childrenCount: 2,
+    elderlyCount: 1,
+    medicalEmergency: false,
+    mobilityImpairment: true,
+    immediateDanger: true,
+    foodShortage: false,
+    waterRisk: true,
+    needs: ["evacuation", "mobility_assistance", "rescue_boat"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000002",
+    reportText: "Water level is rising rapidly near Malir river bridge. 4 families trapped on rooftop without food or clean water.",
+    language: "English",
+    incidentType: "flood",
+    summary: "Multiple families trapped on rooftop due to rising river floodwaters",
+    latitude: 24.8934,
+    longitude: 67.1189,
+    peopleAffected: 16,
+    childrenCount: 6,
+    elderlyCount: 2,
+    medicalEmergency: false,
+    mobilityImpairment: false,
+    immediateDanger: true,
+    foodShortage: true,
+    waterRisk: true,
+    needs: ["evacuation", "food_and_water", "rescue_helicopter"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000003",
+    reportText: "ہمارے محلے میں پانی تین فٹ تک چڑھ چکا ہے۔ بوڑھے لوگ نکل نہیں پا رہے۔",
+    language: "Urdu",
+    incidentType: "flood",
+    summary: "Floodwaters 3 feet deep trapping elderly residents in neighborhood",
+    latitude: 24.8712,
+    longitude: 67.0592,
+    peopleAffected: 12,
+    childrenCount: 3,
+    elderlyCount: 5,
+    medicalEmergency: false,
+    mobilityImpairment: true,
+    immediateDanger: true,
+    foodShortage: false,
+    waterRisk: true,
+    needs: ["evacuation", "mobility_assistance"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000004",
+    reportText: "Building wall collapsed near Saddar commercial market. Two people buried under debris, one severely bleeding.",
+    language: "English",
+    incidentType: "building_collapse",
+    summary: "Commercial wall collapse with trapped casualties requiring urgent trauma care",
+    latitude: 24.8560,
+    longitude: 67.0220,
+    peopleAffected: 4,
+    childrenCount: 0,
+    elderlyCount: 0,
+    medicalEmergency: true,
+    mobilityImpairment: false,
+    immediateDanger: true,
+    foodShortage: false,
+    waterRisk: false,
+    needs: ["search_and_rescue", "ambulance", "heavy_machinery"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000005",
+    reportText: "Severe head injury after roof plaster fell. Need urgent medical team and ambulance.",
+    language: "English",
+    incidentType: "medical_emergency",
+    summary: "Head trauma casualty requiring emergency medical response",
+    latitude: 24.8780,
+    longitude: 67.0350,
+    peopleAffected: 1,
+    childrenCount: 0,
+    elderlyCount: 1,
+    medicalEmergency: true,
+    mobilityImpairment: true,
+    immediateDanger: true,
+    foodShortage: false,
+    waterRisk: false,
+    needs: ["ambulance", "first_aid"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000006",
+    reportText: "Main road to civil hospital is blocked by fallen trees and electric poles. Ambulances cannot pass.",
+    language: "English",
+    incidentType: "road_blockage",
+    summary: "Critical hospital access route obstructed by fallen trees and power lines",
+    latitude: 24.8590,
+    longitude: 67.0100,
+    peopleAffected: 0,
+    childrenCount: 0,
+    elderlyCount: 0,
+    medicalEmergency: false,
+    mobilityImpairment: false,
+    immediateDanger: false,
+    foodShortage: false,
+    waterRisk: false,
+    needs: ["debris_clearing", "utility_repair"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000007",
+    reportText: "Rashan bilkul khatam ho gaya hai flood relief camp mein. 50 bacho ke liye doodh aur pani chahiye.",
+    language: "Roman Urdu",
+    incidentType: "food_shortage",
+    summary: "Critical ration and infant supplies shortage at relief center",
+    latitude: 24.9100,
+    longitude: 67.0900,
+    peopleAffected: 150,
+    childrenCount: 50,
+    elderlyCount: 20,
+    medicalEmergency: false,
+    mobilityImpairment: false,
+    immediateDanger: false,
+    foodShortage: true,
+    waterRisk: true,
+    needs: ["food_and_water", "infant_care"],
+  },
+  {
+    id: "d0000001-0000-0000-0000-000000000008",
+    reportText: "10-year-old child missing after water overflowed near Lyari nullah.",
+    language: "English",
+    incidentType: "missing_person",
+    summary: "Missing child near flooded stormwater drain",
+    latitude: 24.8820,
+    longitude: 66.9950,
+    peopleAffected: 1,
+    childrenCount: 1,
+    elderlyCount: 0,
+    medicalEmergency: false,
+    mobilityImpairment: false,
+    immediateDanger: true,
+    foodShortage: false,
+    waterRisk: true,
+    needs: ["search_and_rescue"],
+  },
+];
