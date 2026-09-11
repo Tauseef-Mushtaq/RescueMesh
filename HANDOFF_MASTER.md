@@ -7,6 +7,7 @@
 **RescueMesh AI** is an AI-powered disaster intelligence and emergency coordination platform designed for high-stakes emergency management. It transforms unstructured, chaotic, multilingual emergency reports (English, Urdu, Roman Urdu) into structured, prioritized rescue intelligence for emergency dispatch teams and disaster coordinators.
 
 ### Key Value Proposition
+
 - **AI Language & Report Processing**: Multilingual NLP extraction (Gemini + Groq fallback) extracts disaster types, affected counts, and vulnerability signals.
 - **Deterministic Priority Scoring**: Risk scores are calculated deterministically via code rules (not raw LLM outputs), guaranteeing predictable priority rankings.
 - **Curated RAG Knowledge Base**: Uses Gemini embeddings (`text-embedding-004`) + Supabase `pgvector` to retrieve verified emergency protocols (UN OCHA, NDMA, WHO, IFRC).
@@ -28,17 +29,17 @@
 
 ## 3. Application Routes & Functionality
 
-| Route | Purpose & Key Features |
-|---|---|
-| `/` | **Cinematic Landing Page** — 9 sections detailing problem, live demo link, architecture, and emergency AI workflow. |
-| `/dashboard` | **Command Center** — Real-time KPI stat cards, 7-day incident trend chart, severity donut chart, incident type distribution, "Needs Attention" panel, and interactive map. |
-| `/incidents` | **Operations Feed** | Multi-filter search (severity, status, type), pagination, quick detail view, and direct priority score badges. |
+| Route             | Purpose & Key Features                                                                                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`               | **Cinematic Landing Page** — 9 sections detailing problem, live demo link, architecture, and emergency AI workflow.                                                                                                    |
+| `/dashboard`      | **Command Center** — Real-time KPI stat cards, 7-day incident trend chart, severity donut chart, incident type distribution, "Needs Attention" panel, and interactive map.                                             |
+| `/incidents`      | **Operations Feed**                                                                                                                                                                                                    | Multi-filter search (severity, status, type), pagination, quick detail view, and direct priority score badges.                                                                        |
 | `/incidents/[id]` | **Incident Intelligence Detail** — Full report breakdown, priority scoring rationale, GPS map preview, **📸 Visual Evidence Inspector**, **📞 Reporter Direct Dispatch Channel**, and AI RAG Advisory briefing button. |
-| `/map` | **Live Disaster Map** | Full-viewport interactive map with severity-coded pulsating markers, quick popup previews, and filter controls. |
-| `/report` | **Emergency Report Submission** | Multilingual form, **📍 One-click "Use My Current Location" (Browser Geolocation)**, reporter contact fields, **📸 Visual Evidence File Upload**, and real-time processing indicator. |
-| `/ask` | **Ask RescueMesh AI (RAG)** | Grounded Q&A interface against curated UN OCHA/NDMA guidelines with cited source badges. |
-| `/knowledge` | **Knowledge Center** | Browsable repository of 23+ curated disaster response protocols with category pills, full-text search, and pgvector stats. |
-| `/about` | **About & System Limits** | Technical stack overview, priority scoring math, safety disclaimers, and data privacy policies. |
+| `/map`            | **Live Disaster Map**                                                                                                                                                                                                  | Full-viewport interactive map with severity-coded pulsating markers, quick popup previews, and filter controls.                                                                       |
+| `/report`         | **Emergency Report Submission**                                                                                                                                                                                        | Multilingual form, **📍 One-click "Use My Current Location" (Browser Geolocation)**, reporter contact fields, **📸 Visual Evidence File Upload**, and real-time processing indicator. |
+| `/ask`            | **Ask RescueMesh AI (RAG)**                                                                                                                                                                                            | Grounded Q&A interface against curated UN OCHA/NDMA guidelines with cited source badges.                                                                                              |
+| `/knowledge`      | **Knowledge Center**                                                                                                                                                                                                   | Browsable repository of 23+ curated disaster response protocols with category pills, full-text search, and pgvector stats.                                                            |
+| `/about`          | **About & System Limits**                                                                                                                                                                                              | Technical stack overview, priority scoring math, safety disclaimers, and data privacy policies.                                                                                       |
 
 ---
 
@@ -57,6 +58,7 @@ supabase/migrations/
 ```
 
 ### Complete SQL Script to Execute in Supabase SQL Editor
+
 If initializing a new Supabase project, execute `00000000000001` through `00000000000005`, then run:
 
 ```sql
@@ -85,30 +87,6 @@ USING (bucket_id = 'incident-evidence');
 
 ---
 
-## 5. Environment Variables Configuration
-
-Create a `.env` file in the project root:
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# Primary AI Provider (Gemini API Free Tier)
-GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-2.5-flash
-GEMINI_FALLBACK_MODEL=gemini-2.0-flash
-GEMINI_SECONDARY_FALLBACK_MODEL=gemini-1.5-flash
-
-# Fallback AI Provider (Groq API)
-GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=llama-3.3-70b-versatile
-
-# RAG Ingestion Protection Secret
-RAG_INGEST_SECRET=your-custom-rag-secret
-```
-
 ---
 
 ## 6. How to Deploy to Vercel
@@ -125,5 +103,6 @@ RAG_INGEST_SECRET=your-custom-rag-secret
 ## 7. Verification & Health Check
 
 The repository has been fully built and verified locally:
+
 - **TypeScript Type Check**: `npx tsc --noEmit` -> **Exit Code 0 (0 errors)**
 - **Next.js Production Build**: `npm run build` -> **All 18 routes compiled successfully**
