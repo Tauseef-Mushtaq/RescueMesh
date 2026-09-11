@@ -364,6 +364,32 @@ export default function IncidentDetailPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>Reporter & Responder Direct Channel</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="text-muted-foreground">Reporter Contact</span>
+                  <span className="font-medium text-foreground">
+                    Available in Field Dispatch
+                  </span>
+                </div>
+                <div className="rounded-md border border-primary/30 bg-primary-soft/40 p-3 text-xs text-foreground space-y-1.5">
+                  <p className="font-semibold text-primary flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    Live Rescue Team Communication Channel
+                  </p>
+                  <p className="text-muted-foreground">
+                    Emergency response team is assigned to this incident location. Coordinators can establish direct field communication via radio dispatch or direct voice call.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Affected People</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">

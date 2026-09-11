@@ -32,6 +32,8 @@ interface CreatedIncident {
  */
 interface ReportFormData {
   reportText: string;
+  reporterName: string;
+  reporterContact: string;
   latitude: string;
   longitude: string;
   peopleAffected: string;
@@ -78,6 +80,8 @@ const CONDITION_FIELDS: {
 
 const INITIAL_FORM_DATA: ReportFormData = {
   reportText: "",
+  reporterName: "",
+  reporterContact: "",
   latitude: "",
   longitude: "",
   peopleAffected: "",
@@ -282,6 +286,8 @@ export default function ReportPage() {
 
     const structuredReport = {
       reportText: formData.reportText.trim(),
+      reporterName: formData.reporterName.trim() || null,
+      reporterContact: formData.reporterContact.trim() || null,
       latitude: isBlank(formData.latitude) ? null : Number(formData.latitude),
       longitude: isBlank(formData.longitude) ? null : Number(formData.longitude),
       peopleAffected: isBlank(formData.peopleAffected)
@@ -367,6 +373,34 @@ export default function ReportPage() {
                 />
                 <div id="reportText-error">
                   <FieldError message={errors.reportText} />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="reporterName" className="text-sm font-medium text-foreground">
+                    Your Name / Identifier (optional)
+                  </label>
+                  <Input
+                    id="reporterName"
+                    type="text"
+                    placeholder="e.g. Tauseef / Resident"
+                    value={formData.reporterName}
+                    onChange={(e) => updateField("reporterName", e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="reporterContact" className="text-sm font-medium text-foreground">
+                    Phone / WhatsApp Number (optional for rescue team)
+                  </label>
+                  <Input
+                    id="reporterContact"
+                    type="tel"
+                    placeholder="e.g. +92 300 1234567"
+                    value={formData.reporterContact}
+                    onChange={(e) => updateField("reporterContact", e.target.value)}
+                  />
                 </div>
               </div>
 

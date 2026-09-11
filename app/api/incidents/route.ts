@@ -219,12 +219,18 @@ export async function POST(request: NextRequest) {
     embedding = embedRes.data[0];
   }
 
+  const fullReportText = input.reporterContact || input.reporterName
+    ? `${input.reportText}\n\n[Reporter Contact: ${input.reporterName ?? "Anonymous"} | Phone: ${input.reporterContact ?? "Not Provided"}]`
+    : input.reportText;
+
   const incidentInsert = {
-    report_text: input.reportText,
-    normalized_text: input.reportText,
+    report_text: fullReportText,
+    normalized_text: fullReportText,
     language: extracted.language,
     incident_type: extracted.incidentType,
-    summary: extracted.summary,
+    summary: input.reporterContact || input.reporterName 
+      ? `${extracted.summary} (Reporter: ${input.reporterName ?? "Resident"}, Contact: ${input.reporterContact ?? "N/A"})`
+      : extracted.summary,
     latitude: input.latitude,
     longitude: input.longitude,
     people_affected: extracted.peopleAffected,

@@ -90,10 +90,13 @@ export function parseReportRequest(body: unknown): IncidentExtractionInput | nul
     if (!isBoolean(record[key])) return null;
   }
 
-  if (!isStringArray(record.needs)) return null;
+  const reporterName = typeof record.reporterName === "string" ? record.reporterName.trim() : null;
+  const reporterContact = typeof record.reporterContact === "string" ? record.reporterContact.trim() : null;
 
   return {
     reportText,
+    reporterName: reporterName || null,
+    reporterContact: reporterContact || null,
     latitude: record.latitude as number | null,
     longitude: record.longitude as number | null,
     peopleAffected: record.peopleAffected as number | null,

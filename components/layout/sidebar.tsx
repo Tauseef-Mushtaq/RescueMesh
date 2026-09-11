@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  BookOpen,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/theme-provider";
 import { cn } from "@/lib/cn";
@@ -31,9 +32,11 @@ const NAV_SECTIONS = [
     label: "Intelligence",
     items: [
       { href: "/ask", label: "Ask RescueMesh", icon: Brain },
+      { href: "/knowledge", label: "Knowledge Center", icon: BookOpen },
     ],
   },
 ];
+
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -78,6 +81,7 @@ export function Sidebar() {
             <ul className="space-y-0.5">
               {section.items.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + "/");
+                const isReport = href === "/report";
                 return (
                   <li key={href}>
                     <Link
@@ -85,10 +89,12 @@ export function Sidebar() {
                       aria-current={active ? "page" : undefined}
                       title={collapsed ? label : undefined}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-primary-soft text-primary border border-primary/20 font-semibold"
-                          : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground",
+                        "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all",
+                        isReport
+                          ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/30 hover:bg-primary-strong hover:scale-[1.02]"
+                          : active
+                            ? "bg-primary-soft text-primary border border-primary/20 font-semibold"
+                            : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground",
                         collapsed && "justify-center px-2"
                       )}
                     >

@@ -13,13 +13,13 @@
   --border: #203B47;
   --border-strong: #2E5060;
 
-  /* --- Brand colors --- */
-  --primary: #4AA7CB;
-  --primary-strong: #69BEDF;
-  --primary-soft: #143B4B;
-  --primary-foreground: #07141C;
+  /* --- Brand colors (Emergency Red / Crimson Command Theme) --- */
+  --primary: #EF4444;
+  --primary-strong: #DC2626;
+  --primary-soft: #450A0A;
+  --primary-foreground: #FFFFFF;
   --secondary: #2AA69A;
-  --secondary-foreground: #07141C;
+  --secondary-foreground: #FFFFFF;
 
   /* --- Semantic --- */
   --info: #38A8DF;
@@ -84,9 +84,9 @@ html.light {
   --surface-elevated: #F9FCFD;
   --border: #D7E2E8;
   --border-strong: #B8CDD5;
-  --primary: #0B5D7A;
-  --primary-strong: #074763;
-  --primary-soft: #DCEFF6;
+  --primary: #DC2626;
+  --primary-strong: #B91C1C;
+  --primary-soft: #FEE2E2;
   --primary-foreground: #FFFFFF;
   --secondary: #0F766E;
   --secondary-foreground: #FFFFFF;

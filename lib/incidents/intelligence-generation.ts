@@ -312,35 +312,40 @@ async function runGeneration(
     }
 
     const text = response.text;
-    if (!text || text.trim() === "") {
-      return {
-        ok: false,
-        reason: "invalid_output",
-        message: "The incident could not be analyzed safely. Please try again.",
-      };
+    if (text && text.trim() !== "") {
+      try {
+        const parsed = JSON.parse(text);
+        const validated = validateGeneratedIntelligence(parsed);
+        if (validated) {
+          return { ok: true, data: validated };
+        }
+      } catch {
+        // Fall through to Groq check if Gemini returned invalid output
+      }
     }
+  }
 
-    let parsed: unknown;
+  // Fallback to Groq API if Gemini chain failed or was unconfigured
+  if (process.env.GROQ_API_KEY) {
     try {
-      parsed = JSON.parse(text);
-    } catch {
-      return {
-        ok: false,
-        reason: "invalid_output",
-        message: "The incident could not be analyzed safely. Please try again.",
-      };
-    }
+      const { callGroqCompletion } = await import("@/lib/ai/groq-fallback");
+      const groqText = await callGroqCompletion(prompt, {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        jsonMode: true,
+      });
 
-    const validated = validateGeneratedIntelligence(parsed);
-    if (!validated) {
-      return {
-        ok: false,
-        reason: "invalid_output",
-        message: "The incident could not be analyzed safely. Please try again.",
-      };
+      if (groqText) {
+        const parsed = JSON.parse(groqText);
+        const validated = validateGeneratedIntelligence(parsed);
+        if (validated) {
+          return { ok: true, data: validated };
+        }
+      }
+    } catch (groqErr) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("RescueMesh Groq intelligence fallback failed:", groqErr);
+      }
     }
-
-    return { ok: true, data: validated };
   }
 
   const message = lastErr instanceof Error ? lastErr.message : String(lastErr);

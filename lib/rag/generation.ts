@@ -191,6 +191,24 @@ export async function generateGroundedAnswer(
     }
   }
 
+  // Fallback to Groq API if Gemini chain failed or was unconfigured
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const { callGroqCompletion } = await import('@/lib/ai/groq-fallback');
+      const groqText = await callGroqCompletion(prompt, {
+        systemInstruction: SYSTEM_INSTRUCTION,
+      });
+
+      if (groqText && groqText.trim()) {
+        return { ok: true, answer: groqText.trim() };
+      }
+    } catch (groqErr) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('RescueMesh Groq RAG fallback failed:', groqErr);
+      }
+    }
+  }
+
   const message = lastErr instanceof Error ? lastErr.message : String(lastErr);
   if (message === 'timeout') {
     return {

@@ -9,6 +9,7 @@
  * application code (M06+) makes decisions from its output.
  */
 import { GoogleGenAI, Type } from '@google/genai';
+import { callGroqCompletion } from '@/lib/ai/groq-fallback';
 
 import {
   EXTRACTION_LANGUAGES,
@@ -21,6 +22,8 @@ import {
 /** Mirrors the relevant subset of M04's ReportFormData, already parsed to real types. */
 export interface IncidentExtractionInput {
   reportText: string;
+  reporterName?: string | null;
+  reporterContact?: string | null;
   latitude: number | null;
   longitude: number | null;
   peopleAffected: number | null;
@@ -335,10 +338,32 @@ export async function extractIncident(
   }
 
   if (!response) {
-    // Every model in the chain failed (or the shared timeout budget ran
-    // out). Return a controlled ExtractionResult here instead of
-    // throwing — extractIncident() must never throw; route.ts awaits it
-    // with no try/catch, relying on that contract.
+    // Every Gemini model in the chain failed (or rate-limited/missing API key).
+    // Attempt fallback via Groq API before giving up.
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const groqOutput = await callGroqCompletion(prompt, {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          jsonMode: true,
+        });
+
+        if (groqOutput) {
+          const parsed = JSON.parse(groqOutput);
+          const validation = validateExtractedIncident(parsed);
+          if (validation.valid && validation.data) {
+            return {
+              ok: true,
+              data: reconcileWithUserInput(validation.data, input),
+            };
+          }
+        }
+      } catch (groqErr) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('RescueMesh Groq fallback failed:', groqErr);
+        }
+      }
+    }
+
     const message = lastErr instanceof Error ? lastErr.message : String(lastErr);
 
     if (message === 'timeout') {
