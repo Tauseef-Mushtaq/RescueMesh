@@ -8,7 +8,7 @@ import { buildIncidentEmbeddingText } from "@/lib/incidents/similarity";
 import type { IncidentRow, IncidentSeverity, IncidentStatus, IncidentType } from "@/lib/supabase/types";
 
 const DASHBOARD_COLUMNS =
-  "id, incident_type, summary, language, latitude, longitude, people_affected, children_count, elderly_count, medical_emergency, mobility_impairment, immediate_danger, food_shortage, water_risk, priority_score, severity, status, created_at, updated_at";
+  "id, incident_type, summary, language, reporter_name, reporter_contact, image_url, latitude, longitude, people_affected, children_count, elderly_count, medical_emergency, mobility_impairment, immediate_danger, food_shortage, water_risk, priority_score, severity, status, created_at, updated_at";
 
 const DEFAULT_LIST_LIMIT = 100;
 const MAX_LIST_LIMIT = 200;
@@ -225,6 +225,9 @@ export async function POST(request: NextRequest) {
 
   const incidentInsert = {
     report_text: fullReportText,
+    reporter_name: input.reporterName ?? null,
+    reporter_contact: input.reporterContact ?? null,
+    image_url: input.imageUrl ?? null,
     normalized_text: fullReportText,
     language: extracted.language,
     incident_type: extracted.incidentType,

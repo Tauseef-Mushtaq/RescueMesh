@@ -24,6 +24,9 @@ export type IncidentStatus = "NEW" | "VERIFIED" | "RESOLVED";
 export interface IncidentRow {
   id: string;
   report_text: string;
+  reporter_name?: string | null;
+  reporter_contact?: string | null;
+  image_url?: string | null;
   normalized_text: string | null;
   language: string | null;
   incident_type: IncidentType | null;

@@ -21,6 +21,9 @@ import type { IncidentSeverity, IncidentStatus, IncidentType } from "@/lib/supab
 interface IncidentDetail {
   id: string;
   reportText: string | null;
+  reporterName?: string | null;
+  reporterContact?: string | null;
+  imageUrl?: string | null;
   normalizedText: string | null;
   language: string | null;
   incidentType: IncidentType | null;
@@ -359,32 +362,45 @@ export default function IncidentDetailPage() {
                     {incident.reportText ?? "No report text available."}
                   </p>
                 </div>
+                {incident.imageUrl && (
+                  <div className="flex flex-col gap-1 mt-2">
+                    <span className="text-xs font-medium uppercase tracking-wide text-primary font-bold">
+                      📸 Visual Disaster Evidence
+                    </span>
+                    <div className="relative rounded-lg overflow-hidden border border-border max-h-[300px] bg-black flex items-center justify-center">
+                      <img
+                        src={incident.imageUrl}
+                        alt="Disaster evidence uploaded by reporter"
+                        className="max-h-[300px] w-auto object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Reporter & Responder Direct Channel</CardTitle>
+            <Card className="border-primary/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-primary flex items-center justify-between">
+                  <span>Reporter Contact & Field Dispatch</span>
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-muted-foreground">Reporter Contact</span>
-                  <span className="font-medium text-foreground">
-                    Available in Field Dispatch
-                  </span>
-                </div>
-                <div className="rounded-md border border-primary/30 bg-primary-soft/40 p-3 text-xs text-foreground space-y-1.5">
-                  <p className="font-semibold text-primary flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                    </span>
-                    Live Rescue Team Communication Channel
-                  </p>
-                  <p className="text-muted-foreground">
-                    Emergency response team is assigned to this incident location. Coordinators can establish direct field communication via radio dispatch or direct voice call.
+                <div className="rounded-md border border-border bg-surface-elevated p-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">Original Report Details</span>
+                    <span className="text-primary font-bold text-[11px] uppercase tracking-wide">Direct Line</span>
+                  </div>
+                  <p className="text-xs text-foreground font-mono bg-background p-2 rounded border border-border/60">
+                    {incident.reportText?.includes("[Reporter Contact:")
+                      ? incident.reportText.split("[Reporter Contact:")[1]?.replace("]", "")
+                      : "Reporter included contact details in original report"}
                   </p>
                 </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Coordinators can call or message the reporter directly to verify live field conditions and guide rescue operations.
+                </p>
               </CardContent>
             </Card>
 

@@ -24,6 +24,7 @@ export interface IncidentExtractionInput {
   reportText: string;
   reporterName?: string | null;
   reporterContact?: string | null;
+  imageUrl?: string | null;
   latitude: number | null;
   longitude: number | null;
   peopleAffected: number | null;

@@ -92,11 +92,13 @@ export function parseReportRequest(body: unknown): IncidentExtractionInput | nul
 
   const reporterName = typeof record.reporterName === "string" ? record.reporterName.trim() : null;
   const reporterContact = typeof record.reporterContact === "string" ? record.reporterContact.trim() : null;
+  const imageUrl = typeof record.imageUrl === "string" ? record.imageUrl.trim() : null;
 
   return {
     reportText,
     reporterName: reporterName || null,
     reporterContact: reporterContact || null,
+    imageUrl: imageUrl || null,
     latitude: record.latitude as number | null,
     longitude: record.longitude as number | null,
     peopleAffected: record.peopleAffected as number | null,

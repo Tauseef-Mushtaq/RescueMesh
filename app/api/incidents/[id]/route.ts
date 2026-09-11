@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { IncidentNeedRow, IncidentRow, IncidentStatus } from "@/lib/supabase/types";
 
 const DETAIL_COLUMNS =
-  "id, report_text, normalized_text, language, incident_type, summary, latitude, longitude, people_affected, children_count, elderly_count, medical_emergency, mobility_impairment, immediate_danger, food_shortage, water_risk, priority_score, severity, confidence, status, created_at, updated_at";
+  "id, report_text, reporter_name, reporter_contact, image_url, normalized_text, language, incident_type, summary, latitude, longitude, people_affected, children_count, elderly_count, medical_emergency, mobility_impairment, immediate_danger, food_shortage, water_risk, priority_score, severity, confidence, status, created_at, updated_at";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -14,6 +14,9 @@ type DetailIncidentRow = Pick<
   IncidentRow,
   | "id"
   | "report_text"
+  | "reporter_name"
+  | "reporter_contact"
+  | "image_url"
   | "normalized_text"
   | "language"
   | "incident_type"
@@ -101,6 +104,9 @@ export async function GET(
       data: {
         id: incidentRow.id,
         reportText: incidentRow.report_text,
+        reporterName: incidentRow.reporter_name,
+        reporterContact: incidentRow.reporter_contact,
+        imageUrl: incidentRow.image_url,
         normalizedText: incidentRow.normalized_text,
         language: incidentRow.language,
         incidentType: incidentRow.incident_type,

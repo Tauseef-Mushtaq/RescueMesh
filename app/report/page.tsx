@@ -34,6 +34,8 @@ interface ReportFormData {
   reportText: string;
   reporterName: string;
   reporterContact: string;
+  imageFile: File | null;
+  imageUrl: string | null;
   latitude: string;
   longitude: string;
   peopleAffected: string;
@@ -82,6 +84,8 @@ const INITIAL_FORM_DATA: ReportFormData = {
   reportText: "",
   reporterName: "",
   reporterContact: "",
+  imageFile: null,
+  imageUrl: null,
   latitude: "",
   longitude: "",
   peopleAffected: "",
@@ -284,10 +288,34 @@ export default function ReportPage() {
       return;
     }
 
+    let uploadedImageUrl = formData.imageUrl;
+
+    if (formData.imageFile) {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const fileExt = formData.imageFile.name.split(".").pop() || "jpg";
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        const { data: storageData, error: storageError } = await supabase.storage
+          .from("incident-evidence")
+          .upload(fileName, formData.imageFile);
+
+        if (storageData && !storageError) {
+          const { data: publicUrlData } = supabase.storage
+            .from("incident-evidence")
+            .getPublicUrl(fileName);
+          uploadedImageUrl = publicUrlData.publicUrl;
+        }
+      } catch (err) {
+        console.warn("Storage upload fallback:", err);
+      }
+    }
+
     const structuredReport = {
       reportText: formData.reportText.trim(),
       reporterName: formData.reporterName.trim() || null,
       reporterContact: formData.reporterContact.trim() || null,
+      imageUrl: uploadedImageUrl || null,
       latitude: isBlank(formData.latitude) ? null : Number(formData.latitude),
       longitude: isBlank(formData.longitude) ? null : Number(formData.longitude),
       peopleAffected: isBlank(formData.peopleAffected)
@@ -401,6 +429,40 @@ export default function ReportPage() {
                     value={formData.reporterContact}
                     onChange={(e) => updateField("reporterContact", e.target.value)}
                   />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="evidenceImage" className="text-sm font-medium text-foreground">
+                  Upload Visual Evidence / Disaster Image (optional)
+                </label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <Input
+                    id="evidenceImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        const localPreview = URL.createObjectURL(file);
+                        setFormData((prev) => ({
+                          ...prev,
+                          imageFile: file,
+                          imageUrl: localPreview,
+                        }));
+                      }
+                    }}
+                    className="text-xs file:bg-primary file:text-primary-foreground file:font-semibold file:border-0 file:rounded file:px-2 file:py-1 hover:file:bg-primary-strong"
+                  />
+                  {formData.imageUrl && (
+                    <div className="relative h-14 w-20 rounded border border-border overflow-hidden bg-black shrink-0">
+                      <img
+                        src={formData.imageUrl}
+                        alt="Evidence preview"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
