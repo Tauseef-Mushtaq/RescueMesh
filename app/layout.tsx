@@ -1,7 +1,11 @@
 import "./globals.css";
-import { NavBar } from "@/components/layout/nav-bar";
-import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { LayoutRouter } from "@/components/layout/layout-router";
+
+export const metadata = {
+  title: "RescueMesh AI — Disaster Intelligence Platform",
+  description: "Turn chaotic multilingual emergency reports into prioritized rescue intelligence.",
+};
 
 export default function RootLayout({
   children,
@@ -9,12 +13,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-cyan-500/30">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('rescuemesh-theme');var r=t==='light'?'light':t==='system'?(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):'dark';if(r==='light')document.documentElement.classList.add('light');else document.documentElement.classList.remove('light');})();`,
+          }}
+        />
+      </head>
+      <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
-          <NavBar />
-          <div className="flex-1">{children}</div>
-          <Footer />
+          <LayoutRouter>{children}</LayoutRouter>
         </ThemeProvider>
       </body>
     </html>

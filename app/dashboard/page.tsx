@@ -2,21 +2,39 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCw, Play, AlertTriangle, Activity, ShieldAlert, Layers } from "lucide-react";
 import { Badge, BadgeVariant } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { IncidentMap } from "@/components/map/incident-map";
 import { PageShell } from "@/components/layout/page-shell";
 import { SectionHeader } from "@/components/layout/section-header";
+import dynamic from "next/dynamic";
 import type { IncidentSeverity, IncidentStatus, IncidentType } from "@/lib/supabase/types";
 
-/**
- * Shape returned by GET /api/incidents. Mirrors the API's camelCase
- * response mapping — see app/api/incidents/route.ts. priorityScore and
- * severity are always server-computed and displayed as-is; nothing on
- * this page recalculates them.
- */
+const IncidentMap = dynamic(
+  () => import("@/components/map/incident-map").then((m) => ({ default: m.IncidentMap })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[420px] md:h-[520px] w-full bg-surface-elevated animate-pulse rounded-xl flex items-center justify-center text-xs text-muted-foreground">Loading Map...</div>,
+  }
+);
+
+const IncidentTrendChart = dynamic(
+  () => import("@/components/charts/incident-trend-chart").then((m) => ({ default: m.IncidentTrendChart })),
+  { ssr: false, loading: () => <div className="h-48 w-full bg-surface-elevated animate-pulse rounded-lg" /> }
+);
+
+const SeverityDonutChart = dynamic(
+  () => import("@/components/charts/severity-donut-chart").then((m) => ({ default: m.SeverityDonutChart })),
+  { ssr: false, loading: () => <div className="h-48 w-full bg-surface-elevated animate-pulse rounded-lg" /> }
+);
+
+const TypeBarChart = dynamic(
+  () => import("@/components/charts/type-bar-chart").then((m) => ({ default: m.TypeBarChart })),
+  { ssr: false, loading: () => <div className="h-40 w-full bg-surface-elevated animate-pulse rounded-lg" /> }
+);
+
 interface DashboardIncident {
   id: string;
   incidentType: IncidentType | null;
@@ -69,7 +87,6 @@ const SEVERITY_DOT: Record<IncidentSeverity, string> = {
 type SeverityFilter = "ALL" | IncidentSeverity;
 type StatusFilter = "ALL" | IncidentStatus;
 type TypeFilter = "ALL" | IncidentType;
-
 type LoadState = "loading" | "loaded" | "error";
 
 function formatRelativeTime(iso: string): string {
@@ -80,31 +97,34 @@ function formatRelativeTime(iso: string): string {
 
   if (diffSec < 60) return "just now";
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffMin < 60) return `${diffMin}m ago`;
   const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr} hr ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
   const diffDay = Math.floor(diffHr / 24);
-  return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+  return `${diffDay}d ago`;
 }
 
-function MetricCard({
+function StatCard({
   label,
   value,
   accentClassName,
+  sublabel,
 }: {
   label: string;
   value: number;
   accentClassName?: string;
+  sublabel?: string;
 }) {
   return (
-    <Card>
+    <Card className="border-border/80 bg-surface">
       <CardContent className="flex flex-col gap-1 p-4 sm:p-5">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </span>
-        <span className={`text-3xl font-semibold tabular-nums ${accentClassName ?? "text-foreground"}`}>
+        <span className={`text-3xl font-black tabular-nums ${accentClassName ?? "text-foreground"}`}>
           {value}
         </span>
+        {sublabel && <span className="text-[10px] text-muted-foreground">{sublabel}</span>}
       </CardContent>
     </Card>
   );
@@ -121,9 +141,9 @@ function IndicatorBadges({ incident }: { incident: DashboardIncident }) {
   if (indicators.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1.5 pt-1">
       {indicators.map((indicator) => (
-        <Badge key={indicator} variant="default" className="text-[11px]">
+        <Badge key={indicator} variant="default" className="text-[10px]">
           {indicator}
         </Badge>
       ))}
@@ -163,10 +183,6 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Deferred via queueMicrotask so the effect body itself never calls
-    // setState synchronously (avoids cascading-render lint warnings) —
-    // fetchIncidents' own internal setState calls are all inside async
-    // continuations, which is fine.
     queueMicrotask(() => {
       fetchIncidents();
     });
@@ -186,16 +202,24 @@ export default function DashboardPage() {
       critical: incidents.filter((i) => i.severity === "CRITICAL").length,
       high: incidents.filter((i) => i.severity === "HIGH").length,
       moderate: incidents.filter((i) => i.severity === "MODERATE").length,
+      low: incidents.filter((i) => i.severity === "LOW").length,
+      active: incidents.filter((i) => i.status === "NEW" || i.status === "VERIFIED").length,
       total: incidents.length,
     };
+  }, [incidents]);
+
+  const needsAttention = useMemo(() => {
+    return incidents
+      .filter((i) => i.severity === "CRITICAL" && i.status === "NEW")
+      .slice(0, 3);
   }, [incidents]);
 
   return (
     <main className="flex flex-1">
       <PageShell>
         <SectionHeader
-          title="RescueMesh Command Center"
-          description="Live emergency intelligence, ordered by newest report."
+          title="Command Center"
+          description="Live emergency intelligence and operational status overview."
           action={
             <div className="flex items-center gap-2">
               <Button
@@ -211,7 +235,9 @@ export default function DashboardPage() {
                   }
                 }}
                 disabled={loadState === "loading"}
+                className="gap-1 text-xs"
               >
+                <Play size={12} />
                 Load Demo Disaster
               </Button>
               <Button
@@ -219,77 +245,98 @@ export default function DashboardPage() {
                 size="sm"
                 onClick={fetchIncidents}
                 disabled={loadState === "loading"}
+                className="gap-1 text-xs"
               >
-                {loadState === "loading" ? "Refreshing…" : "Refresh"}
+                <RefreshCw size={12} className={loadState === "loading" ? "animate-spin" : ""} />
+                Refresh
               </Button>
             </div>
           }
         />
 
+        {/* Top KPI Cards */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <MetricCard label="Critical" value={metrics.critical} accentClassName="text-critical" />
-          <MetricCard label="High" value={metrics.high} accentClassName="text-high" />
-          <MetricCard label="Moderate" value={metrics.moderate} accentClassName="text-moderate" />
-          <MetricCard label="Total" value={metrics.total} />
+          <StatCard label="Critical" value={metrics.critical} accentClassName="text-critical" sublabel="Immediate attention required" />
+          <StatCard label="High Severity" value={metrics.high} accentClassName="text-high" sublabel="Urgent evaluation needed" />
+          <StatCard label="Active Operations" value={metrics.active} accentClassName="text-primary" sublabel="New + Verified status" />
+          <StatCard label="Total Logged" value={metrics.total} sublabel="All time reports" />
         </div>
 
-        {/* Severity Distribution Visualization Bar */}
-        <Card className="p-4 border-border/60 bg-surface/50 space-y-2">
-          <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-            <span>Severity Distribution & Visual Proportion</span>
-            <span className="text-muted-foreground">{metrics.total} Incidents Logged</span>
+        {/* Charts Grid */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="p-4 border-border/80 bg-surface space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">7-Day Incident Trend</h3>
+              <span className="text-[10px] text-muted-foreground">Activity Timeline</span>
+            </div>
+            <IncidentTrendChart incidents={incidents} />
+          </Card>
+
+          <Card className="p-4 border-border/80 bg-surface space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Severity Breakdown</h3>
+              <span className="text-[10px] text-muted-foreground">Risk Proportion</span>
+            </div>
+            <SeverityDonutChart
+              critical={metrics.critical}
+              high={metrics.high}
+              moderate={metrics.moderate}
+              low={metrics.low}
+            />
+          </Card>
+        </div>
+
+        {/* Needs Attention Section (if any critical new incidents exist) */}
+        {needsAttention.length > 0 && (
+          <Card className="border-critical/40 bg-critical/5 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-critical uppercase tracking-wider">
+              <ShieldAlert size={16} />
+              Needs Immediate Attention ({needsAttention.length} Unresolved Critical)
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {needsAttention.map((inc) => (
+                <Link
+                  key={inc.id}
+                  href={`/incidents/${inc.id}`}
+                  className="p-3 rounded-lg bg-surface border border-critical/30 hover:border-critical transition-all text-xs space-y-1 block"
+                >
+                  <div className="flex justify-between items-center">
+                    <Badge variant="critical">CRITICAL · {inc.priorityScore}/100</Badge>
+                    <span className="text-[10px] text-muted-foreground">{formatRelativeTime(inc.createdAt)}</span>
+                  </div>
+                  <p className="font-semibold text-foreground truncate">{inc.summary ?? "Uncategorized report"}</p>
+                </Link>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Incident Type Distribution */}
+        <Card className="p-4 border-border/80 bg-surface space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Incident Types</h3>
+            <span className="text-[10px] text-muted-foreground">Top Categories</span>
           </div>
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-surface-elevated border border-border/40">
-            {metrics.total > 0 ? (
-              <>
-                <div
-                  style={{ width: `${(metrics.critical / metrics.total) * 100}%` }}
-                  className="bg-red-500 h-full transition-all"
-                  title={`Critical: ${metrics.critical}`}
-                />
-                <div
-                  style={{ width: `${(metrics.high / metrics.total) * 100}%` }}
-                  className="bg-orange-500 h-full transition-all"
-                  title={`High: ${metrics.high}`}
-                />
-                <div
-                  style={{ width: `${(metrics.moderate / metrics.total) * 100}%` }}
-                  className="bg-yellow-500 h-full transition-all"
-                  title={`Moderate: ${metrics.moderate}`}
-                />
-                <div
-                  style={{ width: `${((metrics.total - (metrics.critical + metrics.high + metrics.moderate)) / metrics.total) * 100}%` }}
-                  className="bg-emerald-500 h-full transition-all"
-                  title={`Low: ${metrics.total - (metrics.critical + metrics.high + metrics.moderate)}`}
-                />
-              </>
-            ) : (
-              <div className="w-full h-full bg-muted/20" />
-            )}
-          </div>
-          <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground pt-1">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" /> Critical ({metrics.critical})</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" /> High ({metrics.high})</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-yellow-500" /> Moderate ({metrics.moderate})</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Low ({metrics.total - (metrics.critical + metrics.high + metrics.moderate)})</span>
-          </div>
+          <TypeBarChart incidents={incidents} />
         </Card>
 
-        <Card>
-          <CardHeader>
-            <h3 className="text-sm font-semibold text-foreground">Filters</h3>
+        {/* Filters */}
+        <Card className="border-border/80 bg-surface">
+          <CardHeader className="pb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Filters</h3>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="severityFilter" className="text-sm font-medium text-foreground">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="severityFilter" className="text-xs font-medium text-muted-foreground">
                 Severity
               </label>
               <Select
                 id="severityFilter"
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value as SeverityFilter)}
+                className="text-xs"
               >
-                <option value="ALL">All</option>
+                <option value="ALL">All severities</option>
                 <option value="CRITICAL">Critical</option>
                 <option value="HIGH">High</option>
                 <option value="MODERATE">Moderate</option>
@@ -297,16 +344,17 @@ export default function DashboardPage() {
               </Select>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="typeFilter" className="text-sm font-medium text-foreground">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="typeFilter" className="text-xs font-medium text-muted-foreground">
                 Incident type
               </label>
               <Select
                 id="typeFilter"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+                className="text-xs"
               >
-                <option value="ALL">All</option>
+                <option value="ALL">All incident types</option>
                 {(Object.keys(INCIDENT_TYPE_LABELS) as IncidentType[]).map((type) => (
                   <option key={type} value={type}>
                     {INCIDENT_TYPE_LABELS[type]}
@@ -315,16 +363,17 @@ export default function DashboardPage() {
               </Select>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="statusFilter" className="text-sm font-medium text-foreground">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="statusFilter" className="text-xs font-medium text-muted-foreground">
                 Status
               </label>
               <Select
                 id="statusFilter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="text-xs"
               >
-                <option value="ALL">All</option>
+                <option value="ALL">All statuses</option>
                 <option value="NEW">New</option>
                 <option value="VERIFIED">Verified</option>
                 <option value="RESOLVED">Resolved</option>
@@ -333,15 +382,16 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Map Section */}
         <div className="flex flex-col gap-3">
           <SectionHeader
-            title="Incident Map"
-            description="Geographic overview of currently filtered incidents."
+            title="Geospatial Map"
+            description="Geographic distribution of currently filtered incidents."
           />
           {loadState === "loading" ? (
             <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground" role="status">
-                Loading incidents…
+              <CardContent className="p-6 text-xs text-muted-foreground" role="status">
+                Loading incident map…
               </CardContent>
             </Card>
           ) : (
@@ -349,19 +399,22 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Incident Feed List */}
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            Incident Feed
-            {loadState === "loaded" && (
-              <span className="ml-2 font-normal text-muted-foreground">
-                {filteredIncidents.length} of {incidents.length}
-              </span>
-            )}
-          </h3>
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-sm font-bold text-foreground">
+              Incident Feed
+              {loadState === "loaded" && (
+                <span className="ml-2 font-normal text-xs text-muted-foreground">
+                  ({filteredIncidents.length} of {incidents.length} incidents)
+                </span>
+              )}
+            </h3>
+          </div>
 
           {loadState === "loading" && (
             <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground" role="status">
+              <CardContent className="p-6 text-xs text-muted-foreground" role="status">
                 Loading incidents…
               </CardContent>
             </Card>
@@ -369,7 +422,7 @@ export default function DashboardPage() {
 
           {loadState === "error" && (
             <Card>
-              <CardContent className="p-6 text-sm text-destructive" role="alert">
+              <CardContent className="p-6 text-xs text-danger" role="alert">
                 {errorMessage ?? "Unable to load incidents."}
               </CardContent>
             </Card>
@@ -377,17 +430,16 @@ export default function DashboardPage() {
 
           {loadState === "loaded" && incidents.length === 0 && (
             <Card>
-              <CardContent className="flex flex-col gap-1 p-6 text-sm text-muted-foreground">
-                <p>No incidents reported yet.</p>
-                <p>New emergency reports will appear here.</p>
+              <CardContent className="p-6 text-xs text-muted-foreground">
+                No incidents reported yet. Use &quot;Load Demo Disaster&quot; to seed initial data.
               </CardContent>
             </Card>
           )}
 
           {loadState === "loaded" && incidents.length > 0 && filteredIncidents.length === 0 && (
             <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground">
-                No incidents match the current filters.
+              <CardContent className="p-6 text-xs text-muted-foreground">
+                No incidents match the selected filters.
               </CardContent>
             </Card>
           )}
@@ -397,41 +449,36 @@ export default function DashboardPage() {
               <Link
                 key={incident.id}
                 href={`/incidents/${incident.id}`}
-                className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <Card className="transition-colors hover:border-border-strong">
+                <Card className="transition-all hover:border-primary/40">
                   <CardContent className="flex flex-col gap-2 p-4 sm:p-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {incident.severity && (
-                        <Badge variant={SEVERITY_BADGE_VARIANT[incident.severity]}>
-                          <span aria-hidden="true" className="mr-1">
-                            {SEVERITY_DOT[incident.severity]}
-                          </span>
-                          {incident.severity}
-                          {incident.priorityScore !== null ? ` · ${incident.priorityScore}/100` : ""}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {incident.severity && (
+                          <Badge variant={SEVERITY_BADGE_VARIANT[incident.severity]}>
+                            <span aria-hidden="true" className="mr-1">
+                              {SEVERITY_DOT[incident.severity]}
+                            </span>
+                            {incident.severity}
+                            {incident.priorityScore !== null ? ` · ${incident.priorityScore}/100` : ""}
+                          </Badge>
+                        )}
+                        <Badge variant="default">
+                          {incident.incidentType
+                            ? INCIDENT_TYPE_LABELS[incident.incidentType]
+                            : "Uncategorized"}
                         </Badge>
-                      )}
-                      <Badge variant="default">
-                        {incident.incidentType
-                          ? INCIDENT_TYPE_LABELS[incident.incidentType]
-                          : "Uncategorized"}
-                      </Badge>
-                      <Badge variant="default">{incident.status}</Badge>
-                      {incident.latitude !== null && incident.longitude !== null && (
-                        <span className="text-xs text-muted-foreground">Location provided</span>
-                      )}
+                        <Badge variant="default">{incident.status}</Badge>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">{formatRelativeTime(incident.createdAt)}</span>
                     </div>
 
                     {incident.summary && (
-                      <p className="text-sm text-foreground">{incident.summary}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground leading-relaxed">
+                        {incident.summary}
+                      </p>
                     )}
-
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      {incident.peopleAffected !== null && (
-                        <span>{incident.peopleAffected} people affected</span>
-                      )}
-                      <span>{formatRelativeTime(incident.createdAt)}</span>
-                    </div>
 
                     <IndicatorBadges incident={incident} />
                   </CardContent>
