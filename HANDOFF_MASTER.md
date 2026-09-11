@@ -102,7 +102,7 @@ GEMINI_FALLBACK_MODEL=gemini-2.0-flash
 GEMINI_SECONDARY_FALLBACK_MODEL=gemini-1.5-flash
 
 # Fallback AI Provider (Groq API)
-GROQ_API_KEY=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
+GROQ_API_KEY=your-groq-api-key
 GROQ_MODEL=llama-3.3-70b-versatile
 
 # RAG Ingestion Protection Secret
